@@ -1,6 +1,8 @@
-#define LIMIT 100000                // limite do vetor
-#define MAX_THREADS 8               // máximo de threads
-#define THRESHOLD (1 << 10)         // máximo do subarray
+#include <math.h>
+
+#define LIMIT 1000000                                                // limite do vetor
+#define MAX_THREADS 12                                              // máximo de threads
+#define THRESHOLD (1 << (int) floor((log2(LIMIT)) / 2))             // máximo do subarray
 
 typedef struct{
     int* arr;       // vetor que está sendo utilizado
