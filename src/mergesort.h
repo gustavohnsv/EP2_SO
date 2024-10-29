@@ -1,6 +1,6 @@
 #include <math.h>
 
-#define LIMIT 1000000                                                // limite do vetor
+#define LIMIT 1000000                                               // limite do vetor
 #define MAX_THREADS 12                                              // máximo de threads
 #define THRESHOLD (1 << (int) floor((log2(LIMIT)) / 2))             // máximo do subarray
 

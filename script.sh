@@ -10,7 +10,7 @@ fi
 total_time=0
 count=0
 
-echo "time_seq; time_thread; " >> "$OUTPUT_FILE"
+echo "time_seq,time_thread" >> "$OUTPUT_FILE"
 for i in {1..50}; do
     ./$PROGRAM 0 >> "$OUTPUT_FILE"
 done

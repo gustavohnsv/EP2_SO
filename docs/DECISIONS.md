@@ -11,4 +11,8 @@
 #### Observações até o momento (28/10/2024)
 
 - O protótipo está evoluindo, deixando as Threads serem "independentes". Os problemas que ainda estão sendo investigados são os de situação de corrida, onde mais de uma Thread tenta acessar regiões críticas ao mesmo tempo, falha de segmentação, onde uma Thread tenta acessar endereços não mais disponíveis (sendo esse o problema mais crítico até então), entre outros problemas.
-- Enquanto isso, os tempos dos algoritmos de ordenação sem usar Multithread eram mais rápidos do que usando Multithreaded, visto que o tempo de criar e gerenciar threads custa muito caro.  
+- Enquanto isso, os tempos dos algoritmos de ordenação sem usar Multithread eram mais rápidos do que usando Multithreaded, visto que o tempo de criar e gerenciar threads custa muito caro. 
+
+#### Observações até o momento (29/10/2024)
+
+- Acabei consertando algumas coisas no código, pois o algoritmo com Threads não estava ordenando o vetor inteiro, e sim blocos do vetor, de modo que eu tinha trechos ordenados. Porém agora, foi adicionado uma chamada na função `merge()` ao final da função que inicia o MergeSort Multithreaded, mas não se sabe se é permitido ou não.

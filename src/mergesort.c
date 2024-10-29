@@ -111,6 +111,7 @@ void* __mergesort_with_thread__(int* arr, int init, int end) {
     }
     *data = (thread_data){arr, init, end};
     __mergesort_threaded__(data);
+    merge(arr, init, (end - init) / 2, end);
     return NULL;
 }
 
@@ -124,9 +125,9 @@ int main(int argc, char* argv[]) {
         break;
     case 2:
         if (atoi(argv[1]) > 1) {
-            print_arrays = 1;
-        } else {
             print_arrays = atoi(argv[1]);
+        } else {
+            print_arrays = 1;
         }
         break;
     default:
@@ -146,24 +147,24 @@ int main(int argc, char* argv[]) {
         array1[i] = (rand() % LIMIT) + 1;
         array2[i] = array1[i];
     }
-    active_threads += 1;
-        if (print_arrays == 1) {
+    if (print_arrays == 2) {
         for (int i = 0; i < LIMIT; i++) {
             printf("%d ", array2[i]);
         }
         printf("\n");
     }
+    active_threads += 1;
     clock_t start_thread = clock();
     __mergesort_with_thread__(array2, 0, LIMIT - 1);
     clock_t end_thread = clock();
-        if (print_arrays == 1) {
+        if (print_arrays == 2) {
         for (int i = 0; i < LIMIT; i++) {
             printf("%d ", array2[i]);
         }
         printf("\n");
     }
     double time_thread = (double)(end_thread - start_thread) / CLOCKS_PER_SEC;
-    if (print_arrays == 1) {
+    if (print_arrays == 3) {
         for (int i = 0; i < LIMIT; i++) {
             printf("%d ", array1[i]);
         }
@@ -172,17 +173,14 @@ int main(int argc, char* argv[]) {
     clock_t start_seq = clock();
     mergesort(array1, 0, LIMIT - 1);
     clock_t end_seq = clock();
-        if (print_arrays == 1) {
+    if (print_arrays == 3) {
         for (int i = 0; i < LIMIT; i++) {
             printf("%d ", array1[i]);
         }
         printf("\n");
     }
     double time_seq = (double)(end_seq - start_seq) / CLOCKS_PER_SEC;
-    //printf("MergeSort Sequencial versus MergeSort com Threads para %d elementos\n", LIMIT);
-    //printf("Tempo do mergesort sequencial: %f segundos\n", time_seq);
-    //printf("Tempo do mergesort com threads: %f segundos\n", time_thread);
-    printf("%f; %f;\n", time_seq, time_thread);
+    printf("%f,%f\n", time_seq, time_thread);
     free(array1);
     free(array2);
     pthread_mutex_destroy(&lock);
