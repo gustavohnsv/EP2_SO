@@ -1,16 +1,14 @@
+#ifndef MERGESORT_H
+#define MERGESORT_H
 #include <math.h>
 
-#define LIMIT 1000000                                               // limite do vetor
-#define MAX_THREADS 12                                              // máximo de threads
-#define THRESHOLD (1 << (int) floor((log2(LIMIT)) / 2))             // máximo do subarray
-
+#define LIMIT 1000
+#define MAX_THREADS 4
+#define THRESHOLD 100
 typedef struct{
     int* arr;       // vetor que está sendo utilizado
     int init;       // começo daquele subarray
     int end;        // fim daquele subarray
 } thread_data;
 
-void* merge(int* arr, int init, int mid, int end);
-void* mergesort(int* arr, int init, int end);
-void* __mergesort_threaded__(void* arg);
-void* __mergesort_with_thread__(int* arr, int init, int end);
+#endif

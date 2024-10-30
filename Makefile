@@ -7,4 +7,4 @@ run: build
 	./${PROGRAM}.exe 
 
 clean:
-	rm -f *.o *.exe *.txt *.csv
+	rm -f *.o *.exe *.txt *.csv *.out

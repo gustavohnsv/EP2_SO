@@ -9,7 +9,6 @@ pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 pthread_attr_t attr;
 
 volatile unsigned short int avaliable_threads = MAX_THREADS;
-volatile unsigned short int active_threads = 0;
 
 void* merge(int* arr, int init, int mid, int end) {
     int arr1_elements = mid - init + 1;
@@ -83,16 +82,15 @@ void* __mergesort_threaded__(void* arg) {
                 free(left_data);
                 free(right_data);
                 exit(-1);
-            }
+            }            
             if (pthread_create(&right_thread, &attr, __mergesort_threaded__, right_data) != 0) {
                 perror("Erro ao criar thread para subarray direito");
                 free(left_data);
                 free(right_data);
                 exit(-1);
             }
-            pthread_detach(left_thread);
-            pthread_detach(right_thread);
-
+            pthread_join(left_thread, NULL);
+            pthread_join(right_thread, NULL);
         } else {
             pthread_mutex_unlock(&lock);
             mergesort(arr, init, mid);
@@ -100,6 +98,7 @@ void* __mergesort_threaded__(void* arg) {
         }
         merge(arr, init, mid, end);
     }
+    printf("Finalizei uma execução!\n");
     return NULL;
 }
 
@@ -111,13 +110,12 @@ void* __mergesort_with_thread__(int* arr, int init, int end) {
     }
     *data = (thread_data){arr, init, end};
     __mergesort_threaded__(data);
-    merge(arr, init, (end - init) / 2, end);
     return NULL;
 }
 
 int main(int argc, char* argv[]) {
     pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
     unsigned short int print_arrays = 0;
     switch (argc) {
     case 1:
@@ -143,8 +141,8 @@ int main(int argc, char* argv[]) {
         return -1;
     }
     for (int i = 0; i < LIMIT; i++) {
-        // array1[i] = LIMIT - i;
-        array1[i] = (rand() % LIMIT) + 1;
+        array1[i] = LIMIT - i;
+        // array1[i] = (rand() % LIMIT) + 1;
         array2[i] = array1[i];
     }
     if (print_arrays == 2) {
@@ -153,7 +151,6 @@ int main(int argc, char* argv[]) {
         }
         printf("\n");
     }
-    active_threads += 1;
     clock_t start_thread = clock();
     __mergesort_with_thread__(array2, 0, LIMIT - 1);
     clock_t end_thread = clock();

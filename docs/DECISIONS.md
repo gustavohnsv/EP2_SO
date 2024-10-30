@@ -16,3 +16,4 @@
 #### Observações até o momento (29/10/2024)
 
 - Acabei consertando algumas coisas no código, pois o algoritmo com Threads não estava ordenando o vetor inteiro, e sim blocos do vetor, de modo que eu tinha trechos ordenados. Porém agora, foi adicionado uma chamada na função `merge()` ao final da função que inicia o MergeSort Multithreaded, mas não se sabe se é permitido ou não.
+- Está sendo extremamente díficil otimizar o código, já que há concorrência entre as Threads se o tempo for prioridade, ou então um prejuizo no tempo final, se a confiabilidade for a prioridade
