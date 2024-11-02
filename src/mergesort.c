@@ -1,23 +1,31 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 #include <pthread.h>
+
 #include "mergesort.h"
 
-pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-pthread_attr_t attr;
+pthread_mutex_t lock;
+pthread_cond_t cond;
 
-volatile unsigned short int avaliable_threads = MAX_THREADS;
+int avaliable_threads = MAX_THREADS;
+
+int verify_sorted_array(int* arr) {
+    int size = LIMIT;
+    for (int i = 0; i < size - 1; i++) {
+        if (arr[i] > arr[i+1] && i != size-1) {
+            return 1;
+        }
+    }
+    return 0;
+}
 
 void* merge(int* arr, int init, int mid, int end) {
     int arr1_elements = mid - init + 1;
     int arr2_elements = end - mid;
-    int* arr_temp = (int*) calloc(arr1_elements+arr2_elements, sizeof(int));
-    if (!arr_temp) {
-        printf("Erro ao tentar alocar memória na função merge!\n");
-        exit(-1);
-    }
+    int* arr_temp = (int*) calloc((arr1_elements+arr2_elements), sizeof(int));
+    if (!arr_temp) { exit(-1); }
     int iterator_to_init = 0, iterator_to_mid = 0, iterator_global = 0;
     while (iterator_to_init < arr1_elements && iterator_to_mid < arr2_elements) {
         if (arr[init+iterator_to_init] > arr[mid+1+iterator_to_mid]) {
@@ -56,93 +64,121 @@ void* mergesort(int* arr, int init, int end) {
     return NULL;
 }
 
+
+void isort(int* arr, int size) {
+    for (int i = 1; i < size; i++) {
+        int key = arr[i];
+        int j = i - 1;
+        while (j >= 0 && arr[j] > key) {
+            arr[j + 1] = arr[j];
+            j--;
+        }
+        arr[j + 1] = key;
+    }
+}
+
+int compare(const void* a, const void* b) {
+    return (*(int*) a - *(int*)b);
+}
+
+void* sort_option(void* arg) {
+    thread_data* data = (thread_data*) arg;
+    if ((data->end - data->init) > 15) {
+        qsort(data->arr+data->init, (data->end-data->init+1), sizeof(int), compare);
+    } else {
+        isort(data->arr, (data->end-data->init+1));
+    }
+    return NULL;
+}
+
+void* mergesort_threaded(int* arr, int init, int end, int nthreads) {
+    pthread_t thread[nthreads];
+    thread_data* datas[nthreads];
+    for (int i = 0; i < nthreads; i++) {
+        thread_data* data = (thread_data*) malloc(sizeof(thread_data));
+        if (!data) { exit(-1); }
+        datas[i] = data;
+        if (i == nthreads - 1) {
+            *data = (thread_data){arr, ((end + init)/nthreads)*i, end};
+        } else {
+            *data = (thread_data){arr, ((end + init)/nthreads)*i, (((end + init)/nthreads)*(i+1))-1};
+        }
+        if (pthread_create(&thread[i], NULL, sort_option, data) != 0) {
+            for (int j = i; j <= 0; j--) {
+                free(datas[j]);
+            }
+            exit(-1);
+        }
+    }
+    for (int i = 0; i < nthreads; i++) {
+        pthread_join(thread[i], NULL);
+        free(datas[i]);
+    }
+    int step = (end + init) / nthreads;
+    for (int size = step; size < (end + init); size *= 2) {
+        for (int start = 0; start < (end + init); start += 2 * size) {
+            int arr_mid = start + size - 1;
+            int arr_end = (start + 2 * size - 1 < (end + init)) ? start + 2 * size - 1 : (end + init) - 1;
+            if (arr_mid < arr_end) {
+                merge(arr, start, arr_mid, arr_end);
+            }
+        }
+    }
+    return NULL;
+}
+
 void* __mergesort_threaded__(void* arg) {
     thread_data* data = (thread_data*) arg;
     int init = data->init;
     int end = data->end;
-    int* arr = data->arr;
-    free(data);
-    if (init < end) {
-        int mid = (end + init) / 2;
-        pthread_mutex_lock(&lock);
-        if ((end - init) > THRESHOLD && avaliable_threads > 1) {
-            avaliable_threads -= 2;
-            pthread_mutex_unlock(&lock);
-            thread_data* left_data = malloc(sizeof(thread_data));
-            thread_data* right_data = malloc(sizeof(thread_data));
-            if (!left_data || !right_data) {
-                printf("Erro ao tentar alocar memória na função __mergesort_threaded__!\n");
-                exit(-1);
-            }
-            *left_data = (thread_data){arr, init, mid};
-            *right_data = (thread_data){arr, mid + 1, end};
-            pthread_t left_thread, right_thread;
-            if (pthread_create(&left_thread, &attr, __mergesort_threaded__, left_data) != 0) {
-                perror("Erro ao criar thread para subarray esquerdo");
-                free(left_data);
-                free(right_data);
-                exit(-1);
-            }            
-            if (pthread_create(&right_thread, &attr, __mergesort_threaded__, right_data) != 0) {
-                perror("Erro ao criar thread para subarray direito");
-                free(left_data);
-                free(right_data);
-                exit(-1);
-            }
-            pthread_join(left_thread, NULL);
-            pthread_join(right_thread, NULL);
-        } else {
-            pthread_mutex_unlock(&lock);
-            mergesort(arr, init, mid);
-            mergesort(arr, mid+1, end);
-        }
-        merge(arr, init, mid, end);
+    if (init >= end) {
+        return NULL;
     }
-    printf("Finalizei uma execução!\n");
-    return NULL;
-}
-
-void* __mergesort_with_thread__(int* arr, int init, int end) {
-    thread_data* data = malloc(sizeof(thread_data));
-    if (!data) {
-        printf("Erro ao tentar alocar memória na função __mergesort_with_thread__!\n");
+    int mid = (end + init) / 2;
+    int* arr = data->arr;
+    thread_data* left_data = malloc(sizeof(thread_data));
+    thread_data* right_data = malloc(sizeof(thread_data));
+    if (!left_data || !right_data) {
+        printf("Erro ao tentar alocar memória na função __mergesort_threaded__!\n");
         exit(-1);
     }
-    *data = (thread_data){arr, init, end};
-    __mergesort_threaded__(data);
+    *left_data = (thread_data){arr, init, mid};
+    *right_data = (thread_data){arr, mid + 1, end};
+    pthread_mutex_lock(&lock);
+    pthread_t right_thread;
+    if ((end - init) > THRESHOLD && avaliable_threads > 0) {
+        avaliable_threads -= 1;
+        pthread_mutex_unlock(&lock);
+        pthread_create(&right_thread, NULL, __mergesort_threaded__, right_data);
+        __mergesort_threaded__(left_data);
+        pthread_join(right_thread, NULL);
+    } else {
+        pthread_mutex_unlock(&lock);
+        __mergesort_threaded__(left_data);
+        __mergesort_threaded__(right_data);
+    }
+    merge(arr, init, mid, end);
+    free(data);
     return NULL;
 }
 
 int main(int argc, char* argv[]) {
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-    unsigned short int print_arrays = 0;
-    switch (argc) {
-    case 1:
-        print_arrays = 0;
-        break;
-    case 2:
-        if (atoi(argv[1]) > 1) {
-            print_arrays = atoi(argv[1]);
-        } else {
-            print_arrays = 1;
-        }
-        break;
-    default:
+    pthread_mutex_init(&lock, NULL);
+    pthread_cond_init(&cond, NULL);
+    unsigned short int print_arrays;
+    print_arrays = (argc == 1) ? 0 : (atoi(argv[1]) > 1 ? atoi(argv[1]) : 1);
+    if (argc > 2) {
         printf("Parâmetros incorretos!\n");
         return -1;
-        break;
     }
     srand(time(NULL));
     int* array1 = (int*) malloc(sizeof(int) * LIMIT);
     int* array2 = (int*) malloc(sizeof(int) * LIMIT);
-    if (!array1 || !array2) {
-        printf("Erro ao alocar memória!\n");
-        return -1;
-    }
+    if (!array1 || !array2) { exit(-1); }
     for (int i = 0; i < LIMIT; i++) {
-        array1[i] = LIMIT - i;
-        // array1[i] = (rand() % LIMIT) + 1;
+        // array1[i] = LIMIT - i;
+        // array1[i] = i+1;
+        array1[i] = (rand() % LIMIT) + 1;
         array2[i] = array1[i];
     }
     if (print_arrays == 2) {
@@ -151,8 +187,11 @@ int main(int argc, char* argv[]) {
         }
         printf("\n");
     }
+    //thread_data* data = (thread_data*) malloc(sizeof(thread_data));
+    //*data = (thread_data){array2, 0, LIMIT-1};
+    //if (!data) { exit(-1); }
     clock_t start_thread = clock();
-    __mergesort_with_thread__(array2, 0, LIMIT - 1);
+    mergesort_threaded(array2, 0, LIMIT, MAX_THREADS);
     clock_t end_thread = clock();
         if (print_arrays == 2) {
         for (int i = 0; i < LIMIT; i++) {
@@ -178,10 +217,10 @@ int main(int argc, char* argv[]) {
     }
     double time_seq = (double)(end_seq - start_seq) / CLOCKS_PER_SEC;
     printf("%f,%f\n", time_seq, time_thread);
+    printf("Verify sorted array return: %d\n", verify_sorted_array(array2));
     free(array1);
     free(array2);
     pthread_mutex_destroy(&lock);
     pthread_cond_destroy(&cond);
-    pthread_attr_destroy(&attr);
     return 0;
 }

@@ -1,6 +1,6 @@
 # Decisões para algoritmo de ordenação Multi-Thread
 
-#### Algoritmo escolhido: MERGE SORT
+#### Algoritmo escolhido: ~~MERGE SORT~~
 - Como algoritmo escolhido para o desenvolvimento do projeto, seguiremos como base o *Merge Sort*, algoritmo de ordenação recursivo, que tem como motivação o princípio de divisão e conquista. Consiste em ir dividindo recursivamente o meu vetor pela metade, até chegar em um momento em que terei vários "vetores" de tamanho 1. Quando chegar nesse ponto, começo a combiná-los e ordená-los.
 - Esse algortimo tem complexidade $nlog(n)$ de tempo e complexidade $nlog(n)$ de espaço, ou seja, ele é um algoritmo eficiente, mas não é um algoritmo *in loco*, ou seja, ele precisa de vetores temporários que auxiliam nas combinações.
 
@@ -17,3 +17,18 @@
 
 - Acabei consertando algumas coisas no código, pois o algoritmo com Threads não estava ordenando o vetor inteiro, e sim blocos do vetor, de modo que eu tinha trechos ordenados. Porém agora, foi adicionado uma chamada na função `merge()` ao final da função que inicia o MergeSort Multithreaded, mas não se sabe se é permitido ou não.
 - Está sendo extremamente díficil otimizar o código, já que há concorrência entre as Threads se o tempo for prioridade, ou então um prejuizo no tempo final, se a confiabilidade for a prioridade
+
+### Mudança na escolha da abordagem
+
+#### Algoritmos escolhidos: QUICK SORT, INSERTION SORT e trechos do MERGE SORT
+
+- Após conversar com o professor responsável pela disciplina que propôs o Exercício de Programa (este projeto), a abordagem que o código usando Threads assumirá será:
+    - Com base no número de Threads disponíveis, separar o vetor em sub-vetores, e que, de forma paralela, cada um irá executar um algoritmo de ordenação a depender do tamanho do sub-vetor (Caso tenha menos de 15 elementos, aplica Insertion Sort, caso contrário, aplica Quick Sort, disponível nos cabeçalhos padrões de C).
+        - Caso a divisão dos sub-vetores venha a deixar elementos sobrando, iremos acrescentar o restante dos elementos na última Thread.
+    - Após cada sub-vetor estar ordenado separadamente, será aplicado *Merge's* de forma iterativa, que terá o papel de mesclar cada sub-vetor, ordenando-os de par em par.
+    - No fim, o vetor estará ordenado usando abordagens sequenciais e Multithreaded.
+
+#### Observações até o momento (02/11/2024)
+
+- A abordagem usando diversos algoritmos conhecidos de ordenação apresentou um tempo melhor comparado ao *Merge Sort* tradicional. Se por acaso fosse usado *Merge Sort's* sequencias em cada Thread, não conseguiriamos obter um ganho de desempenho, pelo contrário, teríamos um prejuízo por conta da criação e união das Threads (Não se sabe se essa "estratégia" para otimização é válida para o desafio proposto).
+- Fazendo testes com vetores muito grandes e com número ímpar de elementos, aparentemente o tempo para ordenar ficou maior do que o esperado. Talvez possa ser por alguma limitação assintótica do *Quick Sort*, talvez as Threads não estejam conseguindo lidar tão bem com os seus sub-vetores, ou algo semelhante.
