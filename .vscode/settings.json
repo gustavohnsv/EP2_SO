@@ -61,6 +61,13 @@
     "*.embeddedhtml": "html",
     "stdlib.h": "c",
     "unordered_map": "c",
-    "*.tcc": "c"
+    "*.tcc": "c",
+    "unistd.h": "c",
+    "fcntl.h": "c",
+    "mergesort.h": "c",
+    "pthread.h": "c",
+    "array": "c",
+    "string": "c",
+    "string_view": "c"
   }
 }
