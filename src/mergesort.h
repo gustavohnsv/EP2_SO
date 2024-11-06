@@ -26,6 +26,8 @@ int compare(const void* a, const void* b);
 void* sort_option(void* arg);
 void* mergesort_threaded(reg* arr, int init, int end, int nthreads);
 
+void verify_range(reg* arr, int start, int end, const char* message);
 int verify_sorted_array(reg* arr, int size);
+void* print_array(reg* arr, int size);
 
 #endif

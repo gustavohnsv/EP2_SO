@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <unistd.h>
 #include <pthread.h>
-#include <fcntl.h>
 #include <math.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "mergesort.h"
 
@@ -21,6 +24,15 @@ void* print_array(reg* arr, int size) {
     return NULL;
 }
 
+void verify_range(reg* arr, int start, int end, const char* message) {
+    printf("Verificando %s (índices %d até %d):\n", message, start, end);
+    for (int i = start; i < end; i++) {
+        if (arr[i].key > arr[i+1].key) {
+            printf("Erro no índice %d: %u > %u\n", i, arr[i].key, arr[i+1].key);
+        }
+    }
+}
+
 int verify_sorted_array(reg* arr, int size) {
     for (int i = 0; i < size - 1; i++) {
         if (arr[i].key > arr[i+1].key) {
@@ -31,8 +43,11 @@ int verify_sorted_array(reg* arr, int size) {
 }
 
 void* merge(reg* arr, int init, int mid, int end) {
+    // verify_range(arr, init, mid, "Primeira metade antes do merge");
+    // verify_range(arr, mid+1, end, "Segunda metade antes do merge");
     int arr1_elements = mid - init + 1;
     int arr2_elements = end - mid;
+    // printf("init: %d, mid: %d, end: %d\n", init, mid, end);
     reg* arr_temp = (reg*) calloc((arr1_elements+arr2_elements), sizeof(reg));
     if (!arr_temp) { exit(-1); }
     int iterator_to_init = 0, iterator_to_mid = 0, iterator_global = 0;
@@ -59,7 +74,7 @@ void* merge(reg* arr, int init, int mid, int end) {
     for (int i = init; i <= end; i++) {
         arr[i] = arr_temp[i - init];
     }
-    print_array(arr_temp, (end-init));
+    // verify_range(arr, init, end, "Depois do merge");
     free(arr_temp);
     return NULL;
 }
@@ -107,7 +122,7 @@ void* mergesort_threaded(reg* arr, int init, int end, int nthreads) {
         nthreads = (end - init + 1);
     }
     int chunk_size = (end - init + 1) / nthreads;
-    if (chunk_size < 1) chunk_size = 1;    
+    if (chunk_size < 1) chunk_size = 1;   
     for (int i = 0; i < nthreads; i++) {
         thread_data* data = (thread_data*) malloc(sizeof(thread_data));
         if (!data) { exit(-1); }
@@ -115,7 +130,6 @@ void* mergesort_threaded(reg* arr, int init, int end, int nthreads) {
         data->arr = arr;
         data->init = init + (i * chunk_size);
         data->end = (i == nthreads - 1) ? end : (init + (i + 1) * chunk_size - 1);        
-        // printf("init: %d, end: %d\n", data->init, data->end);
         if (pthread_create(&thread[i], NULL, sort_option, data) != 0) {
             for (int j = 0; j < i; j--) {
                 free(datas[j]);
@@ -143,32 +157,57 @@ int main(int argc, char* argv[]) {
         exit(-1);
     }
     char* read_filename = argv[1];
-    //char* write_filename = argv[2];
+    char* write_filename = argv[2];
     int threads = atoi(argv[3]);
-    FILE* fr = fopen(read_filename, "rb");
-    if (!fr) {
-        printf("Erro ao ler o arquivo!\n");
-    }
-    fseek(fr, 0, SEEK_END);
-    long fileSize = ftell(fr);
-    fseek(fr, 0, SEEK_SET);
-    int num_regs = fileSize / REG_SIZE;
-    reg* regs = (reg*) malloc(sizeof(reg)*num_regs);
-    if (!regs) {
-        fclose(fr);
+    if (threads < 1) {
+        printf("Insira um número maior do que 0 para as threads!\n");
         exit(-1);
     }
+    int fd = open(read_filename, O_RDONLY);
+    if (fd == -1) {
+        printf("Erro ao ler o arquivo!\n");
+        exit(-1);
+    }
+    off_t fileSize = lseek(fd, 0, SEEK_END);
+    if (fileSize == -1) {
+        printf("Erro ao obter o tamanho do arquivo!\n");
+        close(fd);
+        exit(-1);
+    }
+    void* fileData = mmap(NULL, fileSize, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+    if (fileData == MAP_FAILED) {
+        printf("Erro ao mapear o arquivo!\n");
+        close(fd);
+        exit(-1);
+    }
+    close(fd);
+    int num_regs = fileSize / REG_SIZE;
+    reg* regs = (reg*) fileData;
+    while (verify_sorted_array(regs, num_regs) != 0) {
+        mergesort_threaded(regs, 0, num_regs-1, threads);
+    }
+    fd = open(write_filename, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+    int r;
     for (int i = 0; i < num_regs; i++) {
-        if (fread(&regs[i], REG_SIZE, 1, fr) == 1) {
-            continue;
-        } else {
+        r = write(fd, &regs[i].key, sizeof(u_int32_t));
+        if (r == -1) {
+            printf("Erro ao escrever no arquivo de saída!\n");
             exit(-1);
         }
+        for (int j = 0; j < REG_DATA_BUFFER; j++) {
+            r = write(fd, &regs[i].data[j], 1);
+            if (r == -1) {
+                printf("Erro ao escrever no arquivo de saída!\n");
+                exit(-1);
+            }
+        }
     }
-    mergesort_threaded(regs, 0, num_regs-1, threads);
-    // print_array(regs, num_regs);
+    fsync(fd);
+    close(fd);
     printf("%d\n", verify_sorted_array(regs, num_regs));
-    fclose(fr);
-    free(regs);
+    if (munmap(fileData, fileSize) == -1) {
+        printf("Erro ao desmapear memória!\n");
+        exit(-1);
+    }
     return 0;
 }
