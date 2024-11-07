@@ -3,7 +3,19 @@
 ```
 
 # Benchmarks dos protótipos
-- O código aloca dois vetores de tamanho *1 * 10⁶*, e em seguida, gera números aleatórios para servir de base para ambos os vetores, ou seja, antes de serem ordenados, eles possuem os mesmos valores.
-- Será usado como base um script que executa o código 50 vezes, para que seja possível obter uma média dos tempos e compará-los no final.
+- O código lê arquivos com registros de 100 bytes, sendo que cada registro possui 4 bytes para chaves e 96 bytes para dados. Mapea-os na memória, ordena utilizando Multithreaded, e por fim, escreve em um arquivo de saída
+- Será usado como base um script que executa o código 50 vezes por quantidade de Threads de maneira iterativa, para que seja possível obter uma média dos tempos e compará-los no final.
 
-# Benchmarks do projeto (to do)
+# Benchmarks do projeto
+
+![Gráfico para 1 mil registros](../assets/grafico_1K.png)
+Figura 1: Gráfico do tempo médio para 1 mil registros - ✅
+
+![Gráfico para 10 mil registros](../assets/grafico_10K.png)
+Figura 1: Gráfico do tempo médio para 10 mil registros - ✅
+
+![Gráfico para 100 mil registros](../assets/grafico_100K.png)
+Figura 1: Gráfico do tempo médio para 100 mil registros - ✅
+
+![Gráfico para 1 milhão registros](../assets/grafico_1M.png)
+Figura 1: Gráfico do tempo médio para 1 milhão registros - ✅

@@ -40,3 +40,7 @@
 - Como o código estava aparentando ter condições de corrida mesmo que as regiões críticas estivessem isoladas, foi acrescentado um `while()` que verifica se o vetor foi ordenado ou não, e caso ele não tenha sido, tenta ordenar novamente (uma abordagem custosa - mas talvez temporária)
 - Modifiquei a lógica para obter os registros usando `mmap()`, diminuindo o número de *allocs*, diminuindo as chances de vazão de memória e diminuindo o tempo gastand alocando memória dinâmicamente. Também implementei a lógica para escrever os registros em um arquivo de saída (porém em binário)
 - Acredita-se que o código possui complexidade *O(n + p)* de espaço, já que ainda utiliza da função `merge()` do *MergeSort* e também leva em conta as Threads criadas, e que possui uma complexidade de ≃ $ O(\frac{nlog(n)}{Threads} + Overhead) $, onde *nlog(n)* pode variar dependendo da qualidade dos vetores, mas que se resume ao tempo médio do *QuickSort*, *Threads* sendo o número de Threads disponíveis para serem paralelizadas e o *Overhead* sendo o tempo gasto na criação e união das mesmas.
+
+#### Observações até o momento (07/11/2024)
+
+- Foi feito uma mudança na função responsável por escrever no arquivo de saída, uma vez que da maneira que estava o programa demorava muito tempo para executar, sendo que na maior parte do tempo ele estava escrevendo no arquivo de saída
