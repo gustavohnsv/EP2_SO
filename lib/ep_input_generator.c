@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 
 int get_chave(int i, int num_regs, int tipo) {
     switch (tipo) {
@@ -23,6 +24,10 @@ int get_chave(int i, int num_regs, int tipo) {
         break;
     }
     return -1;
+}
+
+int WRITE(int fd, char* data, size_t length) {
+    return write(fd, data, length);
 }
 
 int main(int argc, char **argv) {
@@ -60,18 +65,19 @@ int main(int argc, char **argv) {
     srand(semente);
 
     double tamanho_k = 100.0 * num_regs / 1024;
-    double tamanho_g = tamanho_k / 1024;
+    double tamanho_m = tamanho_k / 1024;
+    double tamanho_g = tamanho_m / 1024;
 
     printf("Arquivo: %s\n", filename);
-    printf("Tamanho: %d bytes (%.2f KB, %.2f GB)\n", num_regs * 100, tamanho_k, tamanho_g);
+    printf("Tamanho: %d bytes (%.2f KB, %.2f MB, %.2f GB)\n", num_regs * 100, tamanho_k, tamanho_m, tamanho_g);
     printf("Tipo: %s\n", tipos[tipo]);
     printf("Semente: %d\n", semente);
     printf("\n");
     printf("Prosseguir? (s/n)\n");
-    char resposta = getchar();
+    /*char resposta = getchar();
     if (resposta != 's') {
         exit(0);
-    }
+    }*/
 
     int fd = open(filename, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
     int r;
@@ -79,16 +85,30 @@ int main(int argc, char **argv) {
         printf("Nao foi possivel abrir o arquivo\n");
         exit(-1);
     }
+
+    char* data = malloc(num_regs * 100);
+    char* writePtr = data;
+
     for (int i = 0; i < num_regs; i++) {
         int chave = get_chave(i, num_regs, tipo);
-        r = write(fd, &chave, sizeof(int));
-        assert(r >= 0);
+       
+        memcpy(writePtr, &chave, sizeof(int));
+        writePtr += 4;
+
+        //r = write(fd, &chave, sizeof(int));
+        //assert(r >= 0);
         for (int j = 0; j < 96; j++) {
             unsigned char rnd = rand() % 256;
-            r = write(fd, &rnd, 1);
-            assert(r >= 0);
+            
+            *writePtr = rnd;
+            writePtr++;
+            
+            //r = WRITE(fd, &rnd, 1);
+           // assert(r >= 0);
         }
     }
+
+    write(fd, data, num_regs * 100);
     fsync(fd);
     close(fd);
 

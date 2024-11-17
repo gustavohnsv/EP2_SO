@@ -44,3 +44,9 @@
 #### Observações até o momento (07/11/2024)
 
 - Foi feito uma mudança na função responsável por escrever no arquivo de saída, uma vez que da maneira que estava o programa demorava muito tempo para executar, sendo que na maior parte do tempo ele estava escrevendo no arquivo de saída
+
+#### Observações até o momento (14/11/2024)
+
+- Foi feito um teste implementado o algoritmo de ordenação *Radix Sort*, que é um algoritmo que não ordena por comparação de chaves e se aproveita do algoritmo *Counting Sort*, em que leva em consideração apenas o valor do i-ésimo byte da chave. Durante os testes, houve um rendimento satisfatório nos tempos de execução, porém o atual código que utiliza *Quick Sort* tem um rendimento melhor do que o esperado, já que as complexidades assintóticas são diferentes
+
+- Foi feito mudanças no algortimo de ordenação *Radix Sort*. Ao invés de iterar por digitos decimais, itera por byte, reduzindo o número de iterações totais necessárias. Foram feitas também mudanças no código em geral, com **auxílio de terceiros**, usando estruturas auxiliares que movimentam ponteiros ao invés de movimentar os dados reais, bem como otimizações em manipulação de memória.
