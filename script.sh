@@ -11,10 +11,10 @@ padding=$(( (terminal_width - text_length) / 2 ))
 PROGRAM="psort14713982.exe"
 PROGRAM_EXIT="registros_ordenados.out"
 TEXTS=("Execução para um vetor de mil elementos" "Execução para um vetor de 10 mil elementos" 
-        "Execução para um vetor de 100 mil elementos" "Execução para um vetor de 1 milhão de elementos"
-            "Execução para um vetor de 10 milhões de elementos")
-INPUT_FILES=("1K_registros.dat" "10K_registros.dat" "100K_registros.dat" "1M_registros.dat" "10M_registros.dat")
-OUTPUT_FILES=("saida_1K.csv" "saida_10K.csv" "saida_100K.csv" "saida_1M.csv" "saida_10M.csv")
+        "Execução para um vetor de 100 mil elementos" "Execução para um vetor de 1 milhão de elementos")
+INPUT_FILES=("1K_registros.dat" "10K_registros.dat" "100K_registros.dat" 
+                "1M_registros.dat")
+OUTPUT_FILES=("saida_1K.csv" "saida_10K.csv" "saida_100K.csv" "saida_1M.csv")
 INPUT_FILES_DIR=data
 
 get_terminal_width() {
@@ -34,7 +34,7 @@ show_progress() {
     printf "\r[%s%s] %3d%%" "$(printf '#%.0s' $(seq 1 $filled_width))" "$(printf '.%.0s' $(seq 1 $empty_width))" "$percentage"
 }
 
-for i in {1..5}; do
+for i in {1..4}; do
     if [ -f "${OUTPUT_FILES[i-1]}" ]; then
         rm "${OUTPUT_FILES[i-1]}"
     fi
@@ -48,7 +48,7 @@ rm -rf /mnt/ramdisk
 mkdir -p /mnt/ramdisk
 mount -t tmpfs -o size=4G tmpfs /mnt/ramdisk
 
-for k in {1..5}; do
+for k in {1..4}; do
     clear
     echo "num_threads,exec,real_time,usr_time,sys_time" >> "${OUTPUT_FILES[k-1]}"
     echo ""
