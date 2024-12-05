@@ -1,4 +1,4 @@
-#include "psort14713982.h"
+#include "psort.h"
 
 void print_error_and_exit(char* msg) {
     perror(msg);
@@ -176,7 +176,7 @@ void* sort_option(void* arg) {
     return NULL;
 }
 
-void mergesort_threaded(reg* arr, int init, int end, int nthreads) {
+void threaded_sort(reg* arr, int init, int end, int nthreads) {
     pthread_t thread[nthreads];
     thread_data* datas = (thread_data*) malloc(sizeof(thread_data)*nthreads);
     if (!datas) {
@@ -250,7 +250,7 @@ int main(int argc, char* argv[]) {
     }
     regs_w_data = (reg_w_data*) read_filedata;
     data_to_pointer(regs_w_data, regs, num_regs);
-    mergesort_threaded(regs, 0, num_regs-1, threads);
+    threaded_sort(regs, 0, num_regs-1, threads);
     if (verify_sorted_array(regs, num_regs) != 0) {
         print_error_and_exit("Array não foi ordenado corretamente!");
     } else {

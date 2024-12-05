@@ -18,6 +18,9 @@ nice -19 (comando citado acima)
 time (comando acima)
 ```
 
+- Este programa está fortemente relacionado com sistemas operacionais Linux!
+- Arquivo com um relatório com as escolhas tomadas ao decorrer do projeto está em `docs/DECISIONS.md` e arquivo com benchmarkings do projeto está em `docs/BENCHMARK.md`
+
 # Benchmarking
 
 - Antes de executar os scripts abaixo, certifique-se de dar as devidas permissões com o seguinte comando:

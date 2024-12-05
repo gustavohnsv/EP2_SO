@@ -1,6 +1,3 @@
-#ifndef MERGESORT_H
-#define MERGESORT_H
-
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,6 +47,4 @@ int     compare(const void* a, const void* b);
 void    merge(reg* arr, reg* arr_temp, int init, int mid, int end);
 void    isort(reg* arr, int init, int end);
 void*   sort_option(void* arg);
-void    mergesort_threaded(reg* arr, int init, int end, int nthreads);
-
-#endif
+void    threaded_sort(reg* arr, int init, int end, int nthreads);
