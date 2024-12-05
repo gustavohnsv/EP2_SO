@@ -3,7 +3,7 @@
 - Para executar o programa, esteja na raiz do projeto e insira no terminal:
 
 ```bash
-./psort14713982 <arquivo_entrada> <arquivo_saída> <num_threads>
+./psort <arquivo_entrada> <arquivo_saída> <num_threads>
 ```
 
 - Para um melhor desempenho, o programa pode ser executado da seguinte maneira:
